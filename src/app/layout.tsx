@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kabir Transport - हिसाब किताब",
+  title: "Shri Balaji Sarkar Firms - हिसाब किताब",
   description: "रेती कारोबार इन्वेंटरी और अकाउंटिंग सिस्टम",
 };
 

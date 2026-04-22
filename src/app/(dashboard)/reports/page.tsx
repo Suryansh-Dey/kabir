@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react';
 import { formatCurrency, getCurrentMonth } from '@/lib/utils';
 
+interface TruckSummary {
+  truckNumber: string;
+  totalTrips: number;
+  totalExpense: number;
+  totalRevenue: number;
+  totalProfit: number;
+}
+
 interface Summary {
   totalTrips: number;
   totalExpense: number;
@@ -14,6 +22,7 @@ interface Summary {
   totalRoyalty?: number;
   directSales?: number;
   stockAdditions?: number;
+  truckWise?: TruckSummary[];
 }
 
 export default function ReportsPage() {
@@ -54,6 +63,41 @@ export default function ReportsPage() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
+          {/* Combined */}
+          {khadanSummary && localSummary && (
+            <div className="card card-green" style={{ gridColumn: '1 / -1' }}>
+              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>📊 कुल मिलाकर (Combined)</h3>
+              <div className="stat-grid" style={{ marginBottom: 0 }}>
+                <div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल मुनाफा</p>
+                  <p style={{ fontSize: '2rem', fontWeight: 700 }} className={
+                    (khadanSummary.totalProfit + localSummary.totalProfit) >= 0 ? 'profit' : 'loss'
+                  }>
+                    {formatCurrency(khadanSummary.totalProfit + localSummary.totalProfit)}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल खर्चा</p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--red)' }}>
+                    {formatCurrency(khadanSummary.totalExpense + localSummary.totalExpense)}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल बिक्री</p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--green)' }}>
+                    {formatCurrency(khadanSummary.totalRevenue + localSummary.totalRevenue)}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल ट्रिप्स</p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                    {khadanSummary.totalTrips + localSummary.totalTrips}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Khadan Summary */}
           {khadanSummary && (
             <div className="card">
@@ -89,42 +133,53 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* Combined */}
-          {khadanSummary && localSummary && (
-            <div className="card card-green" style={{ gridColumn: '1 / -1' }}>
-              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>📊 कुल मिलाकर (Combined)</h3>
-              <div className="stat-grid" style={{ marginBottom: 0 }}>
-                <div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल मुनाफा</p>
-                  <p style={{ fontSize: '2rem', fontWeight: 700 }} className={
-                    (khadanSummary.totalProfit + localSummary.totalProfit) >= 0 ? 'profit' : 'loss'
-                  }>
-                    {formatCurrency(khadanSummary.totalProfit + localSummary.totalProfit)}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल खर्चा</p>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--red)' }}>
-                    {formatCurrency(khadanSummary.totalExpense + localSummary.totalExpense)}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल बिक्री</p>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--green)' }}>
-                    {formatCurrency(khadanSummary.totalRevenue + localSummary.totalRevenue)}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>कुल ट्रिप्स</p>
-                  <p style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-                    {khadanSummary.totalTrips + localSummary.totalTrips}
-                  </p>
-                </div>
-              </div>
+
+          {khadanSummary && khadanSummary.truckWise && khadanSummary.truckWise.length > 0 && (
+            <div className="card" style={{ gridColumn: '1 / -1' }}>
+              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚚 खदान गाड़ियाँ (Vehicle-wise Report)</h3>
+              <VehicleReportTable data={khadanSummary.truckWise} />
+            </div>
+          )}
+
+          {localSummary && localSummary.truckWise && localSummary.truckWise.length > 0 && (
+            <div className="card" style={{ gridColumn: '1 / -1' }}>
+              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚛 लोकल गाड़ियाँ (Vehicle-wise Report)</h3>
+              <VehicleReportTable data={localSummary.truckWise} />
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function VehicleReportTable({ data }: { data: TruckSummary[] }) {
+  return (
+    <div className="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>गाड़ी नंबर</th>
+            <th>ट्रिप्स</th>
+            <th>खर्चा</th>
+            <th>बिक्री</th>
+            <th>मुनाफा</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i}>
+              <td><span className="badge badge-blue">{row.truckNumber}</span></td>
+              <td>{row.totalTrips}</td>
+              <td className="loss">{formatCurrency(row.totalExpense)}</td>
+              <td className="profit">{formatCurrency(row.totalRevenue)}</td>
+              <td style={{ fontWeight: 'bold' }} className={row.totalProfit >= 0 ? 'profit' : 'loss'}>
+                {row.totalProfit >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(row.totalProfit))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

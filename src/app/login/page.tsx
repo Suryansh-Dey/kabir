@@ -56,7 +56,7 @@ export default function LoginPage() {
           fontSize: '1.8rem',
           fontWeight: 700,
           marginBottom: '0.25rem',
-        }}>Kabir Transport</h1>
+        }}>Shri Balaji Sarkar Firms</h1>
         <p style={{
           color: 'var(--text-secondary)',
           marginBottom: '2rem',

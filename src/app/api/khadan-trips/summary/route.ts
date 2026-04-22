@@ -28,6 +28,25 @@ export async function GET(request: Request) {
     date: { $gte: startDate, $lt: endDate },
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const truckWiseMap: Record<string, any> = {};
+  trips.forEach(t => {
+    if (!truckWiseMap[t.truckNumber]) {
+      truckWiseMap[t.truckNumber] = {
+        truckNumber: t.truckNumber,
+        totalTrips: 0,
+        totalExpense: 0,
+        totalRevenue: 0,
+        totalProfit: 0,
+      };
+    }
+    const tr = truckWiseMap[t.truckNumber];
+    tr.totalTrips += 1;
+    tr.totalExpense += t.totalExpense;
+    tr.totalRevenue += t.sellingMode === 'direct' ? t.sellingPrice : 0;
+    tr.totalProfit += t.profitLoss;
+  });
+
   const summary = {
     totalTrips: trips.length,
     totalExpense: trips.reduce((s, t) => s + t.totalExpense, 0),
@@ -39,6 +58,7 @@ export async function GET(request: Request) {
     totalRoyalty: trips.reduce((s, t) => s + t.royalty, 0),
     directSales: trips.filter(t => t.sellingMode === 'direct').length,
     stockAdditions: trips.filter(t => t.sellingMode === 'stock').length,
+    truckWise: Object.values(truckWiseMap).sort((a, b) => b.totalProfit - a.totalProfit),
   };
 
   return NextResponse.json(summary);

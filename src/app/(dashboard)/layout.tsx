@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         >
           ☰
         </button>
-        <span style={{ fontWeight: 600 }}>🚛 Kabir Transport</span>
+        <span style={{ fontWeight: 600 }}>🚛 Shri Balaji Sarkar Firms</span>
         <div style={{ width: 32 }} />
       </div>
 
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
             <span style={{ fontSize: '1.5rem' }}>🚛</span>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Kabir Transport</h2>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Shri Balaji Sarkar Firms</h2>
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
             रेती कारोबार हिसाब-किताब
