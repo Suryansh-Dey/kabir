@@ -9,6 +9,20 @@ interface TruckSummary {
   totalExpense: number;
   totalRevenue: number;
   totalProfit: number;
+  // Khadan-specific
+  diesel?: number;
+  salary?: number;
+  maintenance?: number;
+  royalty?: number;
+  toll?: number;
+  police?: number;
+  panchayat?: number;
+  loader?: number;
+  otherExpenses?: number;
+  directSales?: number;
+  stockAdditions?: number;
+  // Local-specific
+  sandPurchase?: number;
 }
 
 interface Summary {
@@ -30,6 +44,8 @@ export default function ReportsPage() {
   const [khadanSummary, setKhadanSummary] = useState<Summary | null>(null);
   const [localSummary, setLocalSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showTruckWise, setShowTruckWise] = useState(false);
+  const [expandedTruck, setExpandedTruck] = useState<string | null>(null);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -47,14 +63,50 @@ export default function ReportsPage() {
 
   useEffect(() => { fetchReports(); }, [month]);
 
+  const toggleTruck = (key: string) => {
+    setExpandedTruck(expandedTruck === key ? null : key);
+  };
+
   return (
     <div>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>📈 मासिक रिपोर्ट (Monthly Report)</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>महीने का पूरा हिसाब एक नज़र में</p>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label className="label">महीना चुनें (Select Month)</label>
-        <input type="month" className="input" value={month} onChange={e => setMonth(e.target.value)} style={{ width: 200 }} />
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <div>
+          <label className="label">महीना चुनें (Select Month)</label>
+          <input type="month" className="input" value={month} onChange={e => setMonth(e.target.value)} style={{ width: 200 }} />
+        </div>
+
+        {/* Toggle Slider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>गाड़ी-वार रिपोर्ट</span>
+          <button
+            onClick={() => setShowTruckWise(!showTruckWise)}
+            style={{
+              width: 52,
+              height: 28,
+              borderRadius: 14,
+              border: 'none',
+              cursor: 'pointer',
+              background: showTruckWise ? 'var(--green)' : 'var(--bg-input)',
+              position: 'relative',
+              transition: 'background 0.3s',
+            }}
+          >
+            <span style={{
+              position: 'absolute',
+              top: 3,
+              left: showTruckWise ? 27 : 3,
+              width: 22,
+              height: 22,
+              borderRadius: '50%',
+              background: '#fff',
+              transition: 'left 0.3s',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            }} />
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -63,7 +115,8 @@ export default function ReportsPage() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
-          {/* Combined */}
+
+          {/* Combined Summary — always at top */}
           {khadanSummary && localSummary && (
             <div className="card card-green" style={{ gridColumn: '1 / -1' }}>
               <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>📊 कुल मिलाकर (Combined)</h3>
@@ -98,8 +151,8 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* Khadan Summary */}
-          {khadanSummary && (
+          {/* Overall Khadan Summary */}
+          {!showTruckWise && khadanSummary && (
             <div className="card">
               <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚚 खदान गाड़ी रिपोर्ट</h3>
               <ReportTable data={[
@@ -117,8 +170,8 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* Local Summary */}
-          {localSummary && (
+          {/* Overall Local Summary */}
+          {!showTruckWise && localSummary && (
             <div className="card">
               <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚛 लोकल गाड़ी रिपोर्ट</h3>
               <ReportTable data={[
@@ -133,19 +186,137 @@ export default function ReportsPage() {
             </div>
           )}
 
+          {/* ===== VEHICLE-WISE SECTION (shown when toggle is ON) ===== */}
+          {showTruckWise && (
+            <>
+              {/* Khadan Trucks Detail */}
+              {khadanSummary?.truckWise && khadanSummary.truckWise.length > 0 && (
+                <div className="card" style={{ gridColumn: '1 / -1' }}>
+                  <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚚 खदान गाड़ियाँ — गाड़ी-वार विवरण</h3>
+                  {khadanSummary.truckWise.map(truck => {
+                    const key = `khadan-${truck.truckNumber}`;
+                    const isExpanded = expandedTruck === key;
+                    return (
+                      <div key={key} style={{ marginBottom: '0.75rem', border: '1px solid var(--bg-input)', borderRadius: 10, overflow: 'hidden' }}>
+                        {/* Header row — always visible */}
+                        <button
+                          onClick={() => toggleTruck(key)}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '0.75rem 1rem',
+                            background: isExpanded ? 'rgba(59,130,246,0.08)' : 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'inherit',
+                            fontSize: '0.95rem',
+                            transition: 'background 0.2s',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span className="badge badge-blue">{truck.truckNumber}</span>
+                            <span style={{ color: 'var(--text-secondary)' }}>{truck.totalTrips} trips</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <span className={truck.totalProfit >= 0 ? 'profit' : 'loss'} style={{ fontWeight: 600 }}>
+                              {truck.totalProfit >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(truck.totalProfit))}
+                            </span>
+                            <span style={{ transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '1.2rem' }}>▼</span>
+                          </div>
+                        </button>
 
-          {khadanSummary && khadanSummary.truckWise && khadanSummary.truckWise.length > 0 && (
-            <div className="card" style={{ gridColumn: '1 / -1' }}>
-              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚚 खदान गाड़ियाँ (Vehicle-wise Report)</h3>
-              <VehicleReportTable data={khadanSummary.truckWise} />
-            </div>
-          )}
+                        {/* Detail panel */}
+                        {isExpanded && (
+                          <div style={{ padding: '0.75rem 1rem 1rem', borderTop: '1px solid var(--bg-input)', animation: 'fadeIn 0.2s' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
+                              <DetailItem label="🛢️ डीजल" value={truck.diesel} />
+                              <DetailItem label="💰 सैलरी" value={truck.salary} />
+                              <DetailItem label="🔧 मरम्मत" value={truck.maintenance} />
+                              <DetailItem label="📜 रॉयल्टी" value={truck.royalty} />
+                              <DetailItem label="🛣️ टोल" value={truck.toll} />
+                              <DetailItem label="👮 पुलिस" value={truck.police} />
+                              <DetailItem label="🏘️ पंचायत" value={truck.panchayat} />
+                              <DetailItem label="🏗️ लोडर" value={truck.loader} />
+                              <DetailItem label="📦 अन्य खर्चा" value={truck.otherExpenses} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--bg-input)', flexWrap: 'wrap' }}>
+                              <SummaryChip label="कुल खर्चा" value={truck.totalExpense} color="var(--red)" />
+                              <SummaryChip label="बिक्री" value={truck.totalRevenue} color="var(--green)" />
+                              <SummaryChip label="मुनाफा" value={truck.totalProfit} color={truck.totalProfit >= 0 ? 'var(--green)' : 'var(--red)'} />
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                डायरेक्ट: {truck.directSales || 0} | स्टॉक: {truck.stockAdditions || 0}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-          {localSummary && localSummary.truckWise && localSummary.truckWise.length > 0 && (
-            <div className="card" style={{ gridColumn: '1 / -1' }}>
-              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚛 लोकल गाड़ियाँ (Vehicle-wise Report)</h3>
-              <VehicleReportTable data={localSummary.truckWise} />
-            </div>
+              {/* Local Trucks Detail */}
+              {localSummary?.truckWise && localSummary.truckWise.length > 0 && (
+                <div className="card" style={{ gridColumn: '1 / -1' }}>
+                  <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>🚛 लोकल गाड़ियाँ — गाड़ी-वार विवरण</h3>
+                  {localSummary.truckWise.map(truck => {
+                    const key = `local-${truck.truckNumber}`;
+                    const isExpanded = expandedTruck === key;
+                    return (
+                      <div key={key} style={{ marginBottom: '0.75rem', border: '1px solid var(--bg-input)', borderRadius: 10, overflow: 'hidden' }}>
+                        <button
+                          onClick={() => toggleTruck(key)}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '0.75rem 1rem',
+                            background: isExpanded ? 'rgba(59,130,246,0.08)' : 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'inherit',
+                            fontSize: '0.95rem',
+                            transition: 'background 0.2s',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span className="badge badge-blue">{truck.truckNumber}</span>
+                            <span style={{ color: 'var(--text-secondary)' }}>{truck.totalTrips} trips</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <span className={truck.totalProfit >= 0 ? 'profit' : 'loss'} style={{ fontWeight: 600 }}>
+                              {truck.totalProfit >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(truck.totalProfit))}
+                            </span>
+                            <span style={{ transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '1.2rem' }}>▼</span>
+                          </div>
+                        </button>
+
+                        {isExpanded && (
+                          <div style={{ padding: '0.75rem 1rem 1rem', borderTop: '1px solid var(--bg-input)', animation: 'fadeIn 0.2s' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
+                              <DetailItem label="🛢️ डीजल" value={truck.diesel} />
+                              <DetailItem label="💰 सैलरी" value={truck.salary} />
+                              <DetailItem label="🔧 मरम्मत" value={truck.maintenance} />
+                              <DetailItem label="🛣️ टोल" value={truck.toll} />
+                              <DetailItem label="📦 रेती खरीद (स्टॉक से)" value={truck.sandPurchase} />
+                              <DetailItem label="📦 अन्य खर्चा" value={truck.otherExpenses} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--bg-input)', flexWrap: 'wrap' }}>
+                              <SummaryChip label="कुल खर्चा" value={truck.totalExpense} color="var(--red)" />
+                              <SummaryChip label="बिक्री" value={truck.totalRevenue} color="var(--green)" />
+                              <SummaryChip label="मुनाफा" value={truck.totalProfit} color={truck.totalProfit >= 0 ? 'var(--green)' : 'var(--red)'} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -153,33 +324,22 @@ export default function ReportsPage() {
   );
 }
 
-function VehicleReportTable({ data }: { data: TruckSummary[] }) {
+/* ---------- Small helper components ---------- */
+
+function DetailItem({ label, value }: { label: string; value?: number }) {
   return (
-    <div className="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>गाड़ी नंबर</th>
-            <th>ट्रिप्स</th>
-            <th>खर्चा</th>
-            <th>बिक्री</th>
-            <th>मुनाफा</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, i) => (
-            <tr key={i}>
-              <td><span className="badge badge-blue">{row.truckNumber}</span></td>
-              <td>{row.totalTrips}</td>
-              <td className="loss">{formatCurrency(row.totalExpense)}</td>
-              <td className="profit">{formatCurrency(row.totalRevenue)}</td>
-              <td style={{ fontWeight: 'bold' }} className={row.totalProfit >= 0 ? 'profit' : 'loss'}>
-                {row.totalProfit >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(row.totalProfit))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div style={{ padding: '0.4rem 0.6rem', background: 'var(--bg-input)', borderRadius: 8 }}>
+      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>{label}</p>
+      <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>{formatCurrency(value || 0)}</p>
+    </div>
+  );
+}
+
+function SummaryChip({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div>
+      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{label}</p>
+      <p style={{ fontWeight: 700, fontSize: '1.1rem', color }}>{formatCurrency(value)}</p>
     </div>
   );
 }

@@ -38,6 +38,17 @@ export async function GET(request: Request) {
         totalExpense: 0,
         totalRevenue: 0,
         totalProfit: 0,
+        diesel: 0,
+        salary: 0,
+        maintenance: 0,
+        royalty: 0,
+        toll: 0,
+        police: 0,
+        panchayat: 0,
+        loader: 0,
+        otherExpenses: 0,
+        directSales: 0,
+        stockAdditions: 0,
       };
     }
     const tr = truckWiseMap[t.truckNumber];
@@ -45,6 +56,17 @@ export async function GET(request: Request) {
     tr.totalExpense += t.totalExpense;
     tr.totalRevenue += t.sellingMode === 'direct' ? t.sellingPrice : 0;
     tr.totalProfit += t.profitLoss;
+    tr.diesel += t.dieselCost;
+    tr.salary += t.driverSalary;
+    tr.maintenance += t.maintenance;
+    tr.royalty += t.royalty;
+    tr.toll += t.tollTax;
+    tr.police += t.policeExpense;
+    tr.panchayat += t.panchayatExpense;
+    tr.loader += t.loaderExpense;
+    tr.otherExpenses += (t.otherExpenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0);
+    if (t.sellingMode === 'direct') tr.directSales += 1;
+    else tr.stockAdditions += 1;
   });
 
   const summary = {

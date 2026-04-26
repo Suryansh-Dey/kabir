@@ -37,6 +37,12 @@ export async function GET(request: Request) {
         totalExpense: 0,
         totalRevenue: 0,
         totalProfit: 0,
+        diesel: 0,
+        salary: 0,
+        maintenance: 0,
+        toll: 0,
+        sandPurchase: 0,
+        otherExpenses: 0,
       };
     }
     const tr = truckWiseMap[t.truckNumber];
@@ -44,6 +50,12 @@ export async function GET(request: Request) {
     tr.totalExpense += t.totalExpense;
     tr.totalRevenue += t.sellingPrice;
     tr.totalProfit += t.profitLoss;
+    tr.diesel += t.dieselCost;
+    tr.salary += t.driverSalary;
+    tr.maintenance += t.maintenance;
+    tr.toll += t.tollTax;
+    tr.sandPurchase += t.sandPurchaseCost;
+    tr.otherExpenses += (t.otherExpenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0);
   });
 
   const summary = {
